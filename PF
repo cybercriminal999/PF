@@ -1,0 +1,112 @@
+Add-Type -AssemblyName System.Windows.Forms
+Add-Type -AssemblyName System.Drawing
+
+function Write-ColoredMessage {
+    param (
+        [string]$message,
+        [ConsoleColor]$color = "White",
+        [switch]$NoNewLine
+    )
+    $originalColor = $Host.UI.RawUI.ForegroundColor
+    $Host.UI.RawUI.ForegroundColor = $color
+    if ($NoNewLine) {
+        Write-Host -NoNewline $message
+    } else {
+        Write-Host $message
+    }
+    $Host.UI.RawUI.ForegroundColor = $originalColor
+}
+
+function Show-AsciiBanner {
+    $banner = @"
+   _____      _                 _____  ______
+  / ____|    | |               |  __ \|  ____|
+ | |    _   _| |__   ___ _ __  | |__) | |__
+ | |   | | | | '_ \ / _ \ '__| |  ___/|  __|
+ | |___| |_| | |_) |  __/ |    | |    | |
+  \_____\__, |_.__/ \___|_|    |_|    |_|
+         __/ |
+        |___/
+"@
+
+    $banner -split "`n" | ForEach-Object {
+        Write-ColoredMessage $_ -color Red
+    }
+
+    Write-Host
+    Write-ColoredMessage "Made by @Cyberthreats - " -color Blue -NoNewLine
+    Write-ColoredMessage "pc checking tool i spent way too much time on this bs bruh" -color Red
+    Write-Host
+    Write-Host
+}
+
+function Show-LoadingBar {
+    $totalLength = 20
+    for ($percent = 0; $percent -le 100; $percent += 10) {
+        $hashCount = [math]::Round(($percent / 100) * $totalLength)
+        $bar = ('#' * $hashCount).PadRight($totalLength, ' ')
+        $percentDisplay = "{0,3}%" -f $percent
+        $line = "$percentDisplay [$bar]"
+        Write-Host -NoNewline "`r"
+        Write-ColoredMessage $line -color Blue -NoNewLine
+        Start-Sleep -Milliseconds 300
+    }
+    Write-Host
+}
+
+function Show-PrefetchFilesGUI {
+    $prefetchDir = "$env:SystemRoot\Prefetch"
+
+    if (-not (Test-Path $prefetchDir)) {
+        Write-ColoredMessage " Prefetch directory not found at $prefetchDir" -color Red
+        return
+    }
+
+    $files = Get-ChildItem -Path $prefetchDir -Filter *.pf -ErrorAction SilentlyContinue
+    if (-not $files) {
+        Write-ColoredMessage " No prefetch files found in $prefetchDir." -color Red
+        return
+    }
+
+    $form = New-Object System.Windows.Forms.Form
+    $form.Text = "Prefetch Files Viewer"
+    $form.WindowState = 'Maximized'
+    $form.MinimumSize = New-Object System.Drawing.Size(800, 600)
+    $form.StartPosition = "CenterScreen"
+    $form.BackColor = [System.Drawing.Color]::White
+    $form.Topmost = $true
+    $form.FormBorderStyle = 'Sizable'
+
+    $dgv = New-Object System.Windows.Forms.DataGridView
+    $dgv.Dock = 'Fill'
+    $dgv.ReadOnly = $true
+    $dgv.BackgroundColor = [System.Drawing.Color]::White
+    $dgv.DefaultCellStyle.ForeColor = [System.Drawing.Color]::Black
+    $dgv.ColumnHeadersDefaultCellStyle.ForeColor = [System.Drawing.Color]::Black
+    $dgv.ColumnHeadersDefaultCellStyle.BackColor = [System.Drawing.Color]::LightGray
+    $dgv.EnableHeadersVisualStyles = $false
+
+    $form.Controls.Add($dgv)
+
+    $table = New-Object System.Data.DataTable
+    $table.Columns.Add("FileName", [string]) | Out-Null
+    $table.Columns.Add("Size (KB)", [double]) | Out-Null
+    $table.Columns.Add("LastWriteTime", [datetime]) | Out-Null
+
+    foreach ($file in $files) {
+        $row = $table.NewRow()
+        $row["FileName"] = $file.Name
+        $row["Size (KB)"] = [math]::Round($file.Length / 1KB, 2)
+        $row["LastWriteTime"] = $file.LastWriteTime
+        $table.Rows.Add($row)
+    }
+
+    $dgv.DataSource = $table
+    $form.Add_Shown({ $form.Activate() })
+    [void] $form.ShowDialog()
+}
+
+Clear-Host
+Show-AsciiBanner
+Show-LoadingBar
+Show-PrefetchFilesGUI
