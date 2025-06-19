@@ -108,14 +108,14 @@ function Show-PrefetchFilesGUI {
     [void] $form.ShowDialog()
 }
 
-Clear-Host
-Show-AsciiBanner
-Show-LoadingBar
-Show-PrefetchFilesGUI
-
 $endTime = Get-Date
 $duration = $endTime - $startTime
 
 Write-Host ""
 Write-Host ("Script ended at   : {0}" -f $endTime.ToString("yyyy-MM-dd HH:mm:ss")) -ForegroundColor Gray
 Write-Host ("Total duration    : {0}" -f $duration.ToString()) -ForegroundColor Gray
+
+Clear-Host
+Show-AsciiBanner
+Show-LoadingBar
+Show-PrefetchFilesGUI
