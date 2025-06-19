@@ -1,3 +1,5 @@
+$startTime = Get-Date
+
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 
@@ -110,3 +112,10 @@ Clear-Host
 Show-AsciiBanner
 Show-LoadingBar
 Show-PrefetchFilesGUI
+
+$endTime = Get-Date
+$duration = $endTime - $startTime
+
+Write-Host ""
+Write-Host ("Script ended at   : {0}" -f $endTime.ToString("yyyy-MM-dd HH:mm:ss")) -ForegroundColor Gray
+Write-Host ("Total duration    : {0}" -f $duration.ToString()) -ForegroundColor Gray
